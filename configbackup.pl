@@ -103,6 +103,7 @@ sub edit_target
 	my $source;
 	my $deleteframe;
 	my $delete = 0;
+	my $label;
 
 	if (defined($name) && length($name))
 	{
@@ -206,8 +207,14 @@ sub edit_target
 	$deleteframe->Checkbutton(
 		-variable =>	\$delete
 	)->pack(-side => 'left', -fill => 'y');
-	$deleteframe->Label(-text => 'Nicht mehr vorhandene Dateien loeschen?')
-		->pack(-side => 'right', -fill => 'y');
+	$label = $deleteframe->Label(
+		-text => 'Lokal nicht mehr vorhandene Dateien auf dem Server' .
+			'loeschen?'
+	);
+	$label->bind('<Button-1>' =>	sub {
+		$delete = !$delete;
+	});
+	$label->pack(-side => 'right', -fill => 'y');
 	$deleteframe->pack();
 
 	$editwin->Button(
@@ -364,7 +371,6 @@ sub set_rsync_path
 				-directory => $defpath
 			);
 			my $_target;
-			print('Defpath: ' . $defpath . "\n");
 			$targetsel->configure(-verify => [ '-f', [ \&isarsyncbin ] ]);
 			$_target = $targetsel->Show();
 

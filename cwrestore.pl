@@ -127,7 +127,7 @@ sub pretend
 	{
 		$elem = pop(@parts);
 	}
-	# $elem .= '/' . pop(@parts);
+	# $elem .= '/' .
 	pop(@parts);
 	$realsrc = join('/', @parts);
 	$realdst .= '/' . $elem;
@@ -191,6 +191,31 @@ sub pretend
 		-text =>	'Bitte entfernen Sie den Haken vor ungewuenschten Aenderungen!'
 	)->pack();
 
+	$buttonframe = $main->Frame();
+	$buttonframe->Button(
+		-text =>	'Alles ankreuzen',
+		-command =>	sub {
+			foreach my $file (keys %filelist)
+			{
+				$filelist{$file} = 1;
+			}
+		},
+		-relief =>	'flat',
+		-overrelief =>	'raised'
+	)->pack(-side => 'left');
+	$buttonframe->Button(
+		-text =>	'Nichts ankreuzen',
+		-command =>	sub {
+			foreach my $file (keys %filelist)
+			{
+				$filelist{$file} = 0;
+			}
+		},
+		-relief =>	'flat',
+		-overrelief =>	'raised'
+	)->pack(-side => 'right');
+	$buttonframe->pack();
+
 	$changesframe = $main->Scrolled(Frame, -scrollbars => 'oe');
 	foreach my $deleted (@delete)
 	{
@@ -218,12 +243,14 @@ sub pretend
 
 	foreach my $changed (@change)
 	{
-		my @st = stat($realdst . '/' . $changed);
+		my @st = stat($realsrc . '/' . $changed);
 		my $frame = $changesframe->Frame();
-		my $label = $frame->Label(
-			-text =>	sprintf('Ueberschreiben der lokalen Kopie von %s ' .
-						'(Geaendert %s, %s)',
-						$realsrc . '/' . $changed,
+		my $label;
+
+		$label = $frame->Label(
+			-text =>	sprintf('Ueberschreiben von %s ' .
+						'(Geaendert %s, %s)', $realsrc .
+						'/' . $changed,
 						scalar localtime($st[9]),
 						humanreadable($st[7]))
 		);
@@ -234,10 +261,23 @@ sub pretend
 			-variable =>	\$filelist{$changed}
 		)->pack(-side => 'left');
 		$label->bind('<Button-1>' =>	sub {
-				$filelist{$changed} = !$filelist{$changed};
+			$filelist{$changed} = !$filelist{$changed};
 		});
 		$label->pack(-side => 'right');
 		$frame->pack();
+
+		if (-f $realdst . '/' . $changed)
+		{
+			my @st2 = stat($realdst . '/' . $changed);
+			$changesframe->Label(
+				-text =>	sprintf('Mit %s vom %s, %s',
+							$realdst . '/' .
+							$changed, scalar
+							localtime($st2[9]),
+							humanreadable($st2[7]))
+			)->pack();
+		}
+
 	}
 	$changesframe->pack();
 

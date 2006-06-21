@@ -113,7 +113,6 @@ sub pretend
 		$elem = pop(@parts);
 	}
 	$realsrc = join('/', @parts);
-	$realdst .= '/' . $elem;
 
 	open(RsyncProcess, sprintf("%s -aunv %s \"%s\" \"%s\" |", $rsync,
 				$arg, $src, $dst)) or
@@ -169,6 +168,31 @@ sub pretend
 		-text =>	'Bitte entfernen Sie den Haken vor ungewuenschten Aenderungen!'
 	)->pack();
 
+	$buttonframe = $main->Frame();
+	$buttonframe->Button(
+		-text =>	'Alles ankreuzen',
+		-command =>	sub {
+			foreach my $file (keys %filelist)
+			{
+				$filelist{$file} = 1;
+			}
+		},
+		-relief =>	'flat',
+		-overrelief =>	'raised'
+	)->pack(-side => 'left');
+	$buttonframe->Button(
+		-text =>	'Nichts ankreuzen',
+		-command =>	sub {
+			foreach my $file (keys %filelist)
+			{
+				$filelist{$file} = 0;
+			}
+		},
+		-relief =>	'flat',
+		-overrelief =>	'raised'
+	)->pack(-side => 'right');
+	$buttonframe->pack();
+
 	$changesframe = $main->Scrolled(Frame, -scrollbars => 'oe');
 	foreach my $deleted (@delete)
 	{
@@ -216,6 +240,18 @@ sub pretend
 		});
 		$label->pack(-side => 'right');
 		$frame->pack();
+
+		if (-f $realdst . '/' . $changed)
+		{
+			my @st2 = stat($realdst . '/' . $changed);
+			$changesframe->Label(
+				-text =>	sprintf('Alte Datei %s vom ' .
+							'%s, %s', $realdst .
+							'/' . $changed, scalar
+							localtime($st2[9]),
+							humanreadable($st2[7]))
+			)->pack();
+		}
 	}
 	$changesframe->pack();
 
